@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { 
   StyleSheet, 
@@ -9,30 +9,55 @@ import {
   TouchableOpacity, 
   ScrollView, 
   SafeAreaView,
-  Platform
+  Platform,
+  ActivityIndicator // Adicionado para mostrar um carregando elegante
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 
+// Importações do Firebase
+import { db, auth } from "../firebase/config"; 
+import { collection, getDocs } from "firebase/firestore";
 
 export default function Home({ navigation }) {
-  
-  // Dummy data mirroring your design structure
-  const pets = [
-    {
-      id: '1',
-      nome: 'Rex',
-      raca: 'Vira Lata',
-      especie: 'Canina',
-      foto: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=150&auto=format&fit=crop'
-    },
-    {
-      id: '2',
-      nome: 'Pipoca',
-      raca: 'Pinscher',
-      especie: 'Canina',
-      foto: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?q=80&w=150&auto=format&fit=crop'
-    }
-  ];
+  // Estados para gerenciar os dados e o carregamento
+  const [pets, setPets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const buscarPetsDoUsuario = async () => {
+      try {
+        // 1. Pega o usuário que está logado no momento
+        const usuarioAtual = auth.currentUser;
+
+        if (usuarioAtual) {
+          const uid = usuarioAtual.uid;
+
+          // 2. Aponta exatamente para a subcoleção onde os pets foram salvos
+          const petsRef = collection(db, "usuarios", uid, "pets");
+          const querySnapshot = await getDocs(petsRef);
+          
+          const listaPets = [];
+          querySnapshot.forEach((doc) => {
+            // Mapeia o id do documento + dados do pet
+            listaPets.push({ id: doc.id, ...doc.data() });
+          });
+
+          // 3. Salva no estado
+          setPets(listaPets);
+        } else {
+          console.log("Nenhum usuário logado");
+          // Opcional: Redirecionar para tela de Login caso não encontre sessão
+           navigation.navigate('Login');
+        }
+      } catch (error) {
+        console.error("Erro ao buscar os pets: ", error);
+      } finally {
+        setLoading(false); // Desativa o indicador de carregamento
+      }
+    };
+
+    buscarPetsDoUsuario();
+  }, []); // Executa ao abrir a tela
 
   return (
     <SafeAreaView style={styles.container}>
@@ -41,30 +66,53 @@ export default function Home({ navigation }) {
         resizeMode="cover"
         style={styles.image}
       >
-        {/* Main Content Area */}
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.headerText}>Meus Pets</Text>
 
-          {/* Render Pet List */}
-          {pets.map((pet) => (
-            <TouchableOpacity 
-              key={pet.id} 
-              style={styles.petCard}
-              activeOpacity={0.8}
-            >
-              <Image source={{ uri: pet.foto }} style={styles.petAvatar} />
-              <View style={styles.petInfo}>
-                <Text style={styles.petName}>{pet.nome}</Text>
-                <Text style={styles.petDetail}><Text style={styles.boldLabel}>Raça:</Text> {pet.raca}</Text>
-                <Text style={styles.petDetail}><Text style={styles.boldLabel}>Espécie:</Text> {pet.especie}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {/* 1. Enquanto busca os dados no Firebase, mostra o Carregando */}
+          {loading ? (
+            <ActivityIndicator size="large" color="#4A90E2" style={{ marginTop: 20 }} />
+          ) : pets.length === 0 ? (
+            /* 2. Caso a lista volte vazia (usuário sem pets cadastrados) */
+            <Text style={styles.emptyText}>Você ainda não cadastrou nenhum pet. 🐾</Text>
+          ) : (
+            /* 3. Renderiza a lista se houver itens */
+            pets.map((pet) => (
+              <TouchableOpacity 
+                key={pet.id} 
+                style={styles.petCard}
+                activeOpacity={0.8}
+              >
+                {/* Fallback de imagem caso não tenha foto salva no banco */}
+                <Image 
+                  source={{ uri: pet.foto || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=150&auto=format&fit=crop' }} 
+                  style={styles.petAvatar} 
+                />
+                
+                <View style={styles.petInfo}>
+                  <Text style={styles.petName}>{pet.nome}</Text>
+                  <Text style={styles.petDetail}>
+                    <Text style={styles.boldLabel}>Raça:</Text> {pet.raca}
+                  </Text>
+                  <Text style={styles.petDetail}>
+                    <Text style={styles.boldLabel}>Espécie:</Text> {pet.especie}
+                  </Text>
+                  {/* Detalhe extra opcional (já que você salva no banco): */}
+                  <Text style={styles.petDetail}>
+                    <Text style={styles.boldLabel}>Sexo:</Text> {pet.sexo === 'macho' ? 'Macho' : 'Fêmea'}
+                  </Text>
+                  <Text style={styles.petDetail}>
+                    <Text style={styles.boldLabel}>Castrado:</Text> {pet.castrado === 'sim' ? 'Sim' : 'Não'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
 
-          {/* Add New Pet Interactive Button */}
+          {/* Botão de Adicionar Novo Pet */}
           <TouchableOpacity 
             style={styles.addPetButton}
             activeOpacity={0.7}
@@ -91,6 +139,7 @@ export default function Home({ navigation }) {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
