@@ -9,7 +9,8 @@ import {
   ImageBackground, 
   Text,
   TouchableOpacity,
-  Alert
+  Alert,
+  Image // 1. Importado para mostrar o preview da foto
 } from 'react-native';
 import Form from "../components/Form.js";
 import Input from "../components/Input.js";
@@ -18,8 +19,11 @@ import { TextInputMask } from 'react-native-masked-text';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
-import { doc, setDoc, collection, addDoc } from "firebase/firestore"; // Added collection and addDoc
+import { doc, setDoc, collection, addDoc } from "firebase/firestore"; 
 import { serverTimestamp } from "firebase/firestore";
+
+// 2. Importa o Image Picker do Expo
+import * as ImagePicker from 'expo-image-picker';
 
 export default function Cadastro({ navigation }) {
   const [value, setValue] = React.useState('macho');
@@ -37,6 +41,31 @@ export default function Cadastro({ navigation }) {
   const [errors, setErrors] = React.useState({});
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmationPassword, setShowConfirmationPassword] = React.useState(false);
+
+  // 3. Estado para armazenar a foto do pet (Base64)
+  const [fotoPet, setFotoPet] = React.useState(null);
+
+  // 4. Função para abrir a galeria e capturar a foto
+  const selecionarFoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert("Permissão necessária", "Precisamos de permissão para acessar suas fotos.");
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.4, // Reduz o tamanho para o Firestore aceitar a string tranquilamente
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      setFotoPet(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
 
   const validarCampo = (campo, valor) => {
     let mensagem = "";
@@ -59,7 +88,7 @@ export default function Cadastro({ navigation }) {
         if (!valor.trim()) mensagem = "Nome do pet é obrigatório";
         break;
       case "raca":
-        if (!valor.trim()) message = "A raça do pet é obrigatória";
+        if (!valor.trim()) mensagem = "A raça do pet é obrigatória"; // Corrigido bug de sintaxe de 'message' para 'mensagem'
         break;
     }
 
@@ -92,13 +121,14 @@ export default function Cadastro({ navigation }) {
       const emailNormalizado = email.toLowerCase().trim();
       const nomeNormalizado = nome.trim();
       const nomePetNormalizado = nomePet.trim();
+      const racaNormalizada = raca.trim();
 
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, emailNormalizado, senha);
         const uid = userCredential.user.uid;
         
         try {
-          // 1. Save general profile info to the user's root document
+          // 1. Salva os dados do usuário
           await setDoc(doc(db, "usuarios", uid), {
             uid: uid,
             nome: nomeNormalizado,
@@ -107,18 +137,18 @@ export default function Cadastro({ navigation }) {
             criadoEm: serverTimestamp()
           });
 
-          // 2. Save the pet into a scalable subcollection 'usuarios/uid/pets'
+          // 2. Salva o pet incluindo a string da foto
           await addDoc(collection(db, "usuarios", uid, "pets"), {
             nome: nomePetNormalizado,
             especie,
-            raca,
+            raca: racaNormalizada,
             sexo: value,
             castrado: castrado,
+            foto: fotoPet, // Foto adicionada aqui!
             criadoEm: serverTimestamp()
           });
 
         } catch(firestoreError) {
-          // Rollback if anything goes wrong during data saving
           await userCredential.user.delete();
           throw firestoreError;
         }
@@ -133,14 +163,10 @@ export default function Cadastro({ navigation }) {
         setNomePet("");
         setRaca("");
         setCastrado("nao");
+        setFotoPet(null); // Reseta a foto após sucesso
         
         Alert.alert('Status do Cadastro:', 'Cadastro realizado com sucesso! 🐾', [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('Login'); 
-            }
-          }
+          { text: 'OK', onPress: () => navigation.navigate('Login') }
         ]);
       } catch (error) {
         if (error.code === "auth/email-already-in-use") {
@@ -245,6 +271,18 @@ export default function Cadastro({ navigation }) {
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Dados do Pet</Text>
 
+              {/* 5. SELETOR VISUAL DA FOTO DO ANIMAL */}
+              <TouchableOpacity style={styles.avatarContainer} onPress={selecionarFoto}>
+                {fotoPet ? (
+                  <Image source={{ uri: fotoPet }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <MaterialCommunityIcons name="camera-plus" size={28} color="#4A5568" />
+                    <Text style={styles.avatarText}>Add Foto</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
               <Input 
                 placeholder="Nome do Pet" 
                 maxLength={30} 
@@ -346,6 +384,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+  },
+  // 6. NOVOS ESTILOS PARA O ELEMENTO DO AVATAR ADICIONADOS AQUI
+  avatarContainer: {
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+    borderStyle: 'dashed',
+  },
+  avatarText: {
+    fontSize: 10,
+    color: '#4A5568',
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#4A90E2',
   },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748', marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', paddingBottom: 5 },
   labelSelect: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginTop: 15, marginBottom: 8 },

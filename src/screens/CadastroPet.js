@@ -9,14 +9,17 @@ import {
   ImageBackground, 
   Text,
   TouchableOpacity,
-  Alert
+  Alert,
+  Image // Importado para mostrar a foto selecionada
 } from 'react-native';
 import Form from "../components/Form.js";
 import Input from "../components/Input.js";
-import { db } from "../firebase/config";
+import { db, auth } from "../firebase/config"; // Consolidado os imports da config
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { auth } from "../firebase/config"; // Used to detect the active logged-in user
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+// 1. Importa o Image Picker do Expo
+import * as ImagePicker from 'expo-image-picker';
 
 export default function CadastroPet({ navigation }) {
   const [value, setValue] = React.useState('macho');
@@ -25,10 +28,37 @@ export default function CadastroPet({ navigation }) {
   const [raca, setRaca] = React.useState("");
   const [castrado, setCastrado] = React.useState('nao');
   const [errors, setErrors] = React.useState({});
+  
+  // 2. Estado para armazenar a foto (guardará a string Base64)
+  const [fotoPet, setFotoPet] = React.useState(null);
+
+  // 3. Função para abrir a galeria do celular
+  const selecionarFoto = async () => {
+    // Solicita permissão para acessar a galeria
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert("Permissão necessária", "Precisamos de permissão para acessar suas fotos.");
+      return;
+    }
+
+    // Abre a galeria
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true, // Permite cortar a imagem em quadrado
+      aspect: [1, 1],      // Força o formato 1:1 (quadrado perfeito para o avatar)
+      quality: 0.4,        // Reduz a qualidade para a string não ficar gigante no banco
+      base64: true,        // ATENÇÃO: Gera a string de texto da imagem
+    });
+
+    if (!result.canceled) {
+      // Guarda a imagem formatada pronta para o banco de dados e para exibição
+      setFotoPet(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
 
   const validarCampo = (campo, valor) => {
     let mensagem = "";
-
     switch(campo) {
       case "nomePet":
         if (!valor.trim()) mensagem = "Nome do pet é obrigatório";
@@ -37,20 +67,14 @@ export default function CadastroPet({ navigation }) {
         if (!valor.trim()) mensagem = "A raça do pet é obrigatória";
         break;
     }
-
-    setErrors((prev) => ({
-      ...prev,
-      [campo]: mensagem
-    }));
+    setErrors((prev) => ({ ...prev, [campo]: mensagem }));
   };
 
   const validar = () => {
     let valido = true;
     const newErrors = { nomePet: "", raca: "" };
-    
     if (!nomePet.trim()) { newErrors.nomePet = "Nome do pet é obrigatório"; valido = false; }
     if (!raca.trim()) { newErrors.raca = "A raça do pet é obrigatória"; valido = false; }
-
     setErrors(newErrors);
     return valido;
   };
@@ -61,7 +85,6 @@ export default function CadastroPet({ navigation }) {
       const racaNormalizada = raca.trim();
 
       try {
-        // 1. Check if there is an active logged-in user session
         const usuarioAtual = auth.currentUser;
         
         if (!usuarioAtual) {
@@ -72,30 +95,27 @@ export default function CadastroPet({ navigation }) {
 
         const uid = usuarioAtual.uid;
 
-        // 2. Direct injection into subcollection: usuarios -> current UID -> pets
+        // 4. Salvando no Firestore incluindo o campo "foto"
         await addDoc(collection(db, "usuarios", uid, "pets"), {
           nome: nomePetNormalizado,
           especie: especie,
           raca: racaNormalizada,
           sexo: value,
           castrado: castrado,
+          foto: fotoPet, // Se for null, o Firebase aceita. Se tiver foto, salva o texto Base64
           criadoEm: serverTimestamp()
         });
 
-        // 3. Clear form states
+        // Limpa os estados
         setValue("macho");
         setEspecie("cachorro");
         setNomePet("");
         setRaca("");
         setCastrado("nao");
+        setFotoPet(null); // Limpa a foto do formulário
         
         Alert.alert('Sucesso!', '🐾 Novo pet cadastrado com sucesso!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('Home'); 
-            }
-          }
+          { text: 'OK', onPress: () => navigation.navigate('Home') }
         ]);
       } catch (error) {
         Alert.alert("Erro ao salvar", "Não foi possível cadastrar o pet: " + error.message);
@@ -124,12 +144,23 @@ export default function CadastroPet({ navigation }) {
             btnPlaceholder="Salvar Pet"
             screen1="Home"
             screen1Text="Voltar"
-            onPress={salvarPet} // Changed to the corrected function name
+            onPress={salvarPet}
           >
             
-            {/* --- SEÇÃO: DADOS DO PET --- */}
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Dados do Pet</Text>
+
+              {/* 5. BOTÃO SELETOR DE FOTO ADICIONADO AQUI */}
+              <TouchableOpacity style={styles.avatarContainer} onPress={selecionarFoto}>
+                {fotoPet ? (
+                  <Image source={{ uri: fotoPet }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <MaterialCommunityIcons name="camera-plus" size={28} color="#4A5568" />
+                    <Text style={styles.avatarText}>Add Foto</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
 
               <Input 
                 placeholder="Nome do Pet" 
@@ -232,6 +263,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+  },
+  // NOVOS ESTILOS PARA O BOTÃO DA FOTO DE PERFIL
+  avatarContainer: {
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+    borderStyle: 'dashed',
+  },
+  avatarText: {
+    fontSize: 10,
+    color: '#4A5568',
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#4A90E2',
   },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748', marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', paddingBottom: 5 },
   labelSelect: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginTop: 15, marginBottom: 8 },
