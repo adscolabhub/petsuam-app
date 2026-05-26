@@ -10,54 +10,74 @@ import {
   ScrollView, 
   SafeAreaView,
   Platform,
-  ActivityIndicator // Adicionado para mostrar um carregando elegante
+  ActivityIndicator,
+  Alert // Importado para confirmar se o usuário quer mesmo sair
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 
 // Importações do Firebase
 import { db, auth } from "../firebase/config"; 
 import { collection, getDocs } from "firebase/firestore";
+import { signOut } from "firebase/auth"; // 1. Importado o método de deslogar
 
 export default function Home({ navigation }) {
   // Estados para gerenciar os dados e o carregamento
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 2. Função para deslogar do Firebase e voltar para a Login
+  const deslogarUsuario = () => {
+    Alert.alert(
+      "Sair da Conta",
+      "Tem certeza que deseja sair do PetSuam?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Sair", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              navigation.replace('Login'); // Usa o replace para limpar o histórico de navegação
+            } catch (error) {
+              Alert.alert("Erro ao sair", "Não foi possível encerrar a sessão: " + error.message);
+            }
+          } 
+        }
+      ]
+    );
+  };
+
   useEffect(() => {
     const buscarPetsDoUsuario = async () => {
       try {
-        // 1. Pega o usuário que está logado no momento
         const usuarioAtual = auth.currentUser;
 
         if (usuarioAtual) {
           const uid = usuarioAtual.uid;
 
-          // 2. Aponta exatamente para a subcoleção onde os pets foram salvos
           const petsRef = collection(db, "usuarios", uid, "pets");
           const querySnapshot = await getDocs(petsRef);
           
           const listaPets = [];
           querySnapshot.forEach((doc) => {
-            // Mapeia o id do documento + dados do pet
             listaPets.push({ id: doc.id, ...doc.data() });
           });
 
-          // 3. Salva no estado
           setPets(listaPets);
         } else {
           console.log("Nenhum usuário logado");
-          // Opcional: Redirecionar para tela de Login caso não encontre sessão
-           navigation.navigate('Login');
+          navigation.replace('Login');
         }
       } catch (error) {
         console.error("Erro ao buscar os pets: ", error);
       } finally {
-        setLoading(false); // Desativa o indicador de carregamento
+        setLoading(false);
       }
     };
 
     buscarPetsDoUsuario();
-  }, []); // Executa ao abrir a tela
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,23 +90,31 @@ export default function Home({ navigation }) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.headerText}>Meus Pets</Text>
+          {/* 3. Container do Topo alterado para alinhar o Título e o Botão Sair */}
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerText}>Meus Pets</Text>
+            <TouchableOpacity 
+              style={styles.logoutButton} 
+              onPress={deslogarUsuario}
+              activeOpacity={0.6}
+            >
+              <MaterialCommunityIcons name="logout" size={26} color="#E53E3E" />
+            </TouchableOpacity>
+          </View>
 
-          {/* 1. Enquanto busca os dados no Firebase, mostra o Carregando */}
+          {/* Enquanto busca os dados no Firebase, mostra o Carregando */}
           {loading ? (
             <ActivityIndicator size="large" color="#4A90E2" style={{ marginTop: 20 }} />
           ) : pets.length === 0 ? (
-            /* 2. Caso a lista volte vazia (usuário sem pets cadastrados) */
             <Text style={styles.emptyText}>Você ainda não cadastrou nenhum pet. 🐾</Text>
           ) : (
-            /* 3. Renderiza a lista se houver itens */
             pets.map((pet) => (
               <TouchableOpacity 
                 key={pet.id} 
                 style={styles.petCard}
                 activeOpacity={0.8}
+                onPress={() => navigation.navigate('PerfilPet', { petSelecionado: pet })}
               >
-                {/* Fallback de imagem caso não tenha foto salva no banco */}
                 <Image 
                   source={{ uri: pet.foto || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=150&auto=format&fit=crop' }} 
                   style={styles.petAvatar} 
@@ -100,7 +128,6 @@ export default function Home({ navigation }) {
                   <Text style={styles.petDetail}>
                     <Text style={styles.boldLabel}>Espécie:</Text> {pet.especie}
                   </Text>
-                  {/* Detalhe extra opcional (já que você salva no banco): */}
                   <Text style={styles.petDetail}>
                     <Text style={styles.boldLabel}>Sexo:</Text> {pet.sexo === 'macho' ? 'Macho' : 'Fêmea'}
                   </Text>
@@ -140,7 +167,6 @@ export default function Home({ navigation }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -154,14 +180,34 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 40,
-    paddingBottom: 100, // Keeps cards from slipping under the navbar
+    paddingBottom: 100,
+  },
+  // 4. NOVOS ESTILOS PARA ALINHAMENTO DO HEADER + BOTÃO LOGOUT
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   headerText: {
     fontSize: 28,
     fontWeight: '900',
     color: '#083068',
-    marginBottom: 24,
     letterSpacing: 0.5,
+  },
+  logoutButton: {
+    backgroundColor: 'rgba(255, 235, 235, 0.9)',
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FED7D7',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#718096',
+    fontSize: 16,
+    marginVertical: 20,
+    fontStyle: 'italic',
   },
   petCard: {
     flexDirection: 'row',
@@ -172,7 +218,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(226, 232, 240, 0.8)',
-    // Elegant soft shadows
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -196,7 +241,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#1A202C',
-    textDecorationLine: 'underline', // Kept from your wireframe concept
+    textDecorationLine: 'underline',
     marginBottom: 4,
   },
   petDetail: {
@@ -213,7 +258,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderWidth: 2,
     borderColor: '#083068',
-    borderStyle: 'dashed', // Changes button style to a smart actionable element
+    borderStyle: 'dashed',
     borderRadius: 18,
     padding: 16,
     justifyContent: 'center',
@@ -239,7 +284,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    paddingBottom: Platform.OS === 'ios' ? 15 : 0, // Extra cushion for iOS home indicators
+    paddingBottom: Platform.OS === 'ios' ? 15 : 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.04,
