@@ -156,7 +156,7 @@ export default function Home({ navigation }) {
             <MaterialCommunityIcons name="paw" size={32} color="#4A90E2" />
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.6}>
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('MapScreen')}>
             <FontAwesome5 name="map-marked-alt" size={28} color="#A0AEC0" />
           </TouchableOpacity>
         </View>

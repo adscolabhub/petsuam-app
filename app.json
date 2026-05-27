@@ -16,16 +16,21 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/petsuam.png"
-        
       },
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyACYI38ck5E_hWiZxpDsOG8eA01KnN5R20"
         }
-      }
+      },
+      "package": "com.andradasdev.PetSuam"
     },
     "web": {
       "favicon": "./src/assets/petsuam.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "35dbad34-96c6-43f6-a9d1-53c4782bbaef"
+      }
     }
   }
 }

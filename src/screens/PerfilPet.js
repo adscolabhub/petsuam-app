@@ -303,7 +303,7 @@ export default function PerfilPet({ route, navigation }) {
         <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('Home')}>
           <MaterialCommunityIcons name="paw" size={28} color="#4A90E2" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} activeOpacity={0.6}>
+        <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('MapScreen')}>
           <FontAwesome5 name="map-marked-alt" size={26} color="#A0AEC0" />
         </TouchableOpacity>
       </View>

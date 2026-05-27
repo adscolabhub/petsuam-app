@@ -1,15 +1,16 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, ImageBackground, Platform, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, ImageBackground, Platform, ActivityIndicator, ScrollView, Modal } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import MapViewDirections from 'react-native-maps-directions';
-import { MaterialCommunityIcons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const GOOGLE_MAPS_APIKEY = 'AIzaSyACYI38ck5E_hWiZxpDsOG8eA01KnN5R20';
 
-export default function MapScreen() {
+export default function MapScreen({ navigation }) {
     const mapRef = useRef(null);
     const [location, setLocation] = useState(null);
     const [places, setPlaces] = useState([]);
@@ -55,19 +56,30 @@ export default function MapScreen() {
   };
     async function searchPlaces(type) {
         if (!location) return;
-        let keyword = 
-            type === 'petshop' ? 'pet shop' : 'veterinary clinic';
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${location.latitude},${location.longitude}&radius=5000&type=${type}&keyword=${keyword}&key=${GOOGLE_MAPS_APIKEY}`;
         try { 
+            let googleType = "";
+            if (type === 'petshop') {
+                googleType = 'pet_store';
+            } else if (type === 'veterinary') {
+                googleType = 'veterinary_care';
+            }
+            const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json` +
+                `?location=${location.latitude},${location.longitude}` +
+                `&radius=5000` +
+                `&type=${googleType}` +
+                `&key=${GOOGLE_MAPS_APIKEY}`;
+            console.log("URL:", url);
             const response = await fetch(url);
             const data = await response.json();
-            setPlaces(data.results);
+            console.log("DATA:", data);
+            if (data.status !== 'OK') {
+                Alert.alert('Erro', 'Não foi possível obter os locais: ' + data.status);
+                return;
+            } else {
+                setPlaces(data.results);   
+            }
         } catch (error) {
-            return(<View style={styles.center}>
-                <ActivityIndicator size="large" color="#083068" />
-                <Text>API NÃO RESPONDENDO</Text>
-            </View>
-            );
+            console.log("ERRO FETCH:");
             console.log(error);
         }
     }
@@ -81,141 +93,126 @@ export default function MapScreen() {
     }
     return (
         <View style={styles.container}>
-            <ImageBackground
-                source={require('../assets/background4.png')}
-                resizeMode="cover"
-                style={styles.image}
+            <StatusBar style="dark" />
+            {/* HEADER DA TELA */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={24} color="#083068" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Serviços Próximos</Text>
+                <View style={{ width: 40 }} />
+                <TouchableOpacity 
+                    style={styles.logoutButton} 
+                    onPress={deslogarUsuario}
+                    activeOpacity={0.6}
+                    >
+                    <MaterialCommunityIcons name="logout" size={26} color="#E53E3E" />
+                </TouchableOpacity>
+            </View>
+            <MapView
+                ref={mapRef}
+                style={styles.map}
+                showsUserLocation
+                initialRegion={{
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                }}
             >
-                <ScrollView 
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                    >
-                    <View style={styles.headerContainer}>
-                        <Text style={styles.headerText}>Serviços Próximos</Text>
-                        <TouchableOpacity 
-                        style={styles.logoutButton} 
-                        onPress={deslogarUsuario}
-                        activeOpacity={0.6}
-                        >
-                        <MaterialCommunityIcons name="logout" size={26} color="#E53E3E" />
-                        </TouchableOpacity>
-                    </View>
-                    <MapView
-                        ref={mapRef}
-                        style={styles.map}
-                        showsUserLocation
-                        initialRegion={{
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                            latitudeDelta: 0.05,
-                            longitudeDelta: 0.05,
+                {places.map((place, index) => (
+                    <Marker
+                        key={index}
+                        coordinate={{
+                            latitude: place.geometry.location.lat,
+                            longitude: place.geometry.location.lng,
                         }}
-                    >
-                        {places.map((place, index) => (
-                            <Marker
-                                key={index}
-                                coordinate={{
-                                    latitude: place.geometry.location.lat,
-                                    longitude: place.geometry.location.lng,
-                                }}
-                                title={place.name}
-                                description={place.vicinity}
-                                onPress={() => setSelectedPlace({
-                                    latitude: place.geometry.location.lat,
-                                    longitude: place.geometry.location.lng
-                                })
-                                }
+                        title={place.name}
+                        description={place.vicinity}
+                        onPress={() => setSelectedPlace({
+                            latitude: place.geometry.location.lat,
+                            longitude: place.geometry.location.lng
+                        })
+                        }
+                    />
+                ))}
+                {selectedPlace && (
+                    <MapViewDirections
+                        origin={location}
+                        destination={selectedPlace}
+                        apikey={GOOGLE_MAPS_APIKEY}
+                        strokeWidth={4}
+                        strokeColor="blue"
+                    />
+                )}
+            </MapView>
+            <View style={styles.buttonsContainer}>
+                {/* PETSHOPS */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => searchPlaces('petshop')}
+                    activeOpacity={0.88}
+                >
+                    <View style={styles.buttonContent}>
+                        <View style={styles.iconContainer}>
+                            <MaterialIcons
+                                name="pets"
+                                size={24}
+                                color="#FFFFFF"
                             />
-                        ))}
-                        {selectedPlace && (
-                            <MapViewDirections
-                                origin={location}
-                                destination={selectedPlace}
-                                apikey={GOOGLE_MAPS_APIKEY}
-                                strokeWidth={4}
-                                strokeColor="blue"
+                        </View>
+                        <View>
+                            <Text style={styles.buttonTitle}>
+                                Pet Shops
+                            </Text>
+                            <Text style={styles.buttonSubtitle}>
+                                Encontrar agora
+                            </Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+                {/* VETERINÁRIAS */}
+                <TouchableOpacity
+                    style={[styles.button, styles.vetButton]}
+                    onPress={() => searchPlaces('veterinary')}
+                    activeOpacity={0.88}
+                >
+                    <View style={styles.buttonContent}>
+                        <View style={styles.iconContainer}>
+                            <MaterialCommunityIcons
+                                name="stethoscope"
+                                size={24}
+                                color="#FFFFFF"
                             />
-                        )}
-                    </MapView>
-                    <View style={styles.buttonsContainer}>
-                        {/* PETSHOPS */}
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => searchPlaces('petshop')}
-                            activeOpacity={0.88}
-                        >
-                            <View style={styles.buttonContent}>
-                                <View style={styles.iconContainer}>
-                                    <MaterialIcons
-                                        name="pets"
-                                        size={24}
-                                        color="#FFFFFF"
-                                    />
-                                </View>
-                                <View>
-                                    <Text style={styles.buttonTitle}>
-                                        Pet Shops
-                                    </Text>
-                                    <Text style={styles.buttonSubtitle}>
-                                        Encontrar agora
-                                    </Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                        {/* VETERINÁRIAS */}
-                        <TouchableOpacity
-                            style={[styles.button, styles.vetButton]}
-                            onPress={() => searchPlaces('veterinary')}
-                            activeOpacity={0.88}
-                        >
-                            <View style={styles.buttonContent}>
-                                <View style={styles.iconContainer}>
-                                    <MaterialCommunityIcons
-                                        name="stethoscope"
-                                        size={24}
-                                        color="#FFFFFF"
-                                    />
-                                </View>
-                                <View>
-                                    <Text style={styles.buttonTitle}>
-                                        Veterinárias
-                                    </Text>
-                                    <Text style={styles.buttonSubtitle}>
-                                        Clínicas perto
-                                    </Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
+                        </View>
+                        <View>
+                            <Text style={styles.buttonTitle}>
+                                Veterinárias
+                            </Text>
+                            <Text style={styles.buttonSubtitle}>
+                                Clínicas perto
+                            </Text>
+                        </View>
                     </View>
-                    { /*
-                    <View style={styles.buttonsContainer}>
-                        <TouchableOpacity style={styles.button} onPress={() => searchPlaces('petshop')}>
-                            <Text style={styles.buttonText}>Pet Shops</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.button} onPress={() => searchPlaces('veterinary')}>
-                            <Text style={styles.buttonText}>Veterinárias</Text>
-                        </TouchableOpacity>
-                    </View>
-                    */}
-                </ScrollView>
-                <View style={styles.bottomNav}>
-                    <TouchableOpacity style={styles.navItem} activeOpacity={0.6}>
-                        <MaterialCommunityIcons name="paw" size={32} color="#4A90E2" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.navItem} activeOpacity={0.6}>
-                        <FontAwesome5 name="map-marked-alt" size={28} color="#A0AEC0" />
-                    </TouchableOpacity>
-                </View>
-                <StatusBar style="auto" />
-            </ImageBackground>
+                </TouchableOpacity>
+            </View>
+            {/* BOTTOM NAVIGATION */}
+            <View style={styles.bottomNav}>
+                <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('Home')}>
+                <MaterialCommunityIcons name="paw" size={28} color="#4A90E2" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('MapScreen')}>
+                <FontAwesome5 name="map-marked-alt" size={26} color="#A0AEC0" />
+                </TouchableOpacity>
+            </View>
+            <StatusBar style="auto" />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+      flex: 1,
   },
 
   map: {
@@ -225,27 +222,18 @@ const styles = StyleSheet.create({
 
   buttonsContainer: {
     position: "absolute",
-
-    bottom: 145,
-
+    bottom: 75,
     width: "100%",
-
     flexDirection: "row",
-
     justifyContent: "space-between",
-
     alignSelf: "center",
-
     padding: 10,
-
-    borderRadiusTopLeft: 32,
-    borderRadiusTopRight: 32,
-
+    borderRadius: 32,
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
     backgroundColor: "rgba(255,255,255,0.22)",
-
     borderWidth: 1.2,
     borderColor: "rgba(255,255,255,0.35)",
-
     shadowColor: "#000",
     shadowOffset: {
         width: 0,
@@ -253,27 +241,18 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.12,
     shadowRadius: 20,
-
     elevation: 12,
-},
+    },
   button: {
     flex: 1,
-
     height: 82,
-
     marginHorizontal: 6,
-
     borderRadius: 24,
-
     justifyContent: "center",
-
     paddingHorizontal: 18,
-
     backgroundColor: "rgba(59,130,246,0.88)",
-
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.25)",
-
     shadowColor: "#2563EB",
     shadowOffset: {
         width: 0,
@@ -281,62 +260,47 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.22,
     shadowRadius: 14,
-
     elevation: 8,
 },
 
 vetButton: {
     backgroundColor: "rgba(139,92,246,0.88)",
 },
-
 buttonContent: {
     flexDirection: "row",
     alignItems: "center",
 },
-
 iconContainer: {
     width: 35,
     height: 35,
-
     borderRadius: 24,
-
     backgroundColor: "rgba(255,255,255,0.18)",
-
     justifyContent: "center",
     alignItems: "center",
-
     marginRight: 10,
-
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.22)",
 },
-
 buttonTitle: {
     color: "#FFFFFF",
-
     fontSize: 18,
-
     fontWeight: "700",
 },
-
 buttonSubtitle: {
     color: "rgba(255,255,255,0.82)",
-
     fontSize: 13,
-
     marginTop: 2,
 },
-
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    center: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
-  image: {
+image: {
     flex: 1,
     width: '100%',
-    },
-  headerContainer: {
+},
+headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -350,10 +314,11 @@ buttonSubtitle: {
     },
   logoutButton: {
     backgroundColor: 'rgba(255, 235, 235, 0.9)',
-    padding: 10,
+    padding: 5,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#FED7D7',
+    marginLeft: -130,
     },
   bottomNav: {
     position: 'absolute',
@@ -384,5 +349,7 @@ buttonSubtitle: {
     paddingHorizontal: 0,
     paddingTop: 0,
     paddingBottom: 0,
-  },
+    },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#E2E8F0', paddingTop: Platform.OS === 'android' ? 35 : 10 },
+  headerTitle: { fontSize: 20, fontWeight: '800', color: '#083068' },
 });
