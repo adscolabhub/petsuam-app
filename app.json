@@ -4,20 +4,18 @@
     "slug": "PetSuam",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/icon.png",
+    "icon": "./src/assets/petsuam.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./src/assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/android-icon-foreground.png",
-        "backgroundColor": "#E6F4FE"
+        "foregroundImage": "./src/assets/petsuam.png"
         
       },
       "config": {
@@ -27,7 +25,7 @@
       }
     },
     "web": {
-      "favicon": "./src/assets/favicon.png"
+      "favicon": "./src/assets/petsuam.png"
     }
   }
 }
