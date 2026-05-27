@@ -7,22 +7,28 @@
     "icon": "./src/assets/petsuam.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./src/assets/splash-icon.png",
-      "resizeMode": "contain"
+      "image": "./src/assets/petsuam.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/petsuam.png"
+        "foregroundImage": "./src/assets/petsuam.png",
+        "backgroundColor": "#ffffff"
       },
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyACYI38ck5E_hWiZxpDsOG8eA01KnN5R20"
         }
       },
-      "package": "com.andradasdev.PetSuam"
+      "package": "com.adscolabhub.PetSuam",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+  ]
     },
     "web": {
       "favicon": "./src/assets/petsuam.png"
