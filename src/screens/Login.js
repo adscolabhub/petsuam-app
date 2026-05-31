@@ -94,7 +94,7 @@ export default function Login({navigation}) {
           btnPlaceholder="Enviar"
           screen1="Cadastro"
           screen1Text="Criar conta"
-          screen2="Cadastro" // You can change this to "ResetPassword" later if needed
+          screen2="EsqueceuSenha" // You can change this to "ResetPassword" later if needed
           screen2Text="Esqueci minha senha"
           onPress={entrar}
           validarForm={validarForm}
