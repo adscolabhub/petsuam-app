@@ -10,16 +10,22 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Image // Importado para mostrar a foto selecionada
+  Image,
+  Modal, // Added for the picker overlay
+  FlatList // Added to handle rows fluidly
 } from 'react-native';
 import Form from "../components/Form.js";
 import Input from "../components/Input.js";
-import { db, auth } from "../firebase/config"; // Consolidado os imports da config
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { db, auth } from "../firebase/config"; 
+import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-
-// 1. Importa o Image Picker do Expo
 import * as ImagePicker from 'expo-image-picker';
+
+// Predefined breed database lookup tables
+const LISTA_RACAS = {
+  cachorro: ["Vira-lata (SRD)", "Labrador", "Golden Retriever", "Pastor Alemão", "Poodle", "Bulldog", "Pinscher", "Chihuahua", "Pug", "Outra Raça"],
+  gato: ["Vira-lata (SRD)", "Persa", "Siamês", "Maine Coon", "Angorá", "Sphynx", "Ragdoll", "Outra Raça"]
+};
 
 export default function CadastroPet({ navigation }) {
   const [value, setValue] = React.useState('macho');
@@ -28,13 +34,20 @@ export default function CadastroPet({ navigation }) {
   const [raca, setRaca] = React.useState("");
   const [castrado, setCastrado] = React.useState('nao');
   const [errors, setErrors] = React.useState({});
-  
-  // 2. Estado para armazenar a foto (guardará a string Base64)
   const [fotoPet, setFotoPet] = React.useState(null);
 
-  // 3. Função para abrir a galeria do celular
+  // NEW STATE: Visibility toggle for selection modal window
+  const [modalVisible, setModalVisible] = React.useState(false);
+
+  // Safely wipes breed state when species changes to avoid misaligned data
+  const handleEspecieChange = (novaEspecie) => {
+    setEspecie(novaEspecie);
+    setRaca(""); // Clear select string
+  };
+
+  const validarForm = nomePet.trim().length > 1 && raca.trim().length > 1;
+
   const selecionarFoto = async () => {
-    // Solicita permissão para acessar a galeria
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
@@ -42,17 +55,15 @@ export default function CadastroPet({ navigation }) {
       return;
     }
 
-    // Abre a galeria
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, // Permite cortar a imagem em quadrado
-      aspect: [1, 1],      // Força o formato 1:1 (quadrado perfeito para o avatar)
-      quality: 0.4,        // Reduz a qualidade para a string não ficar gigante no banco
-      base64: true,        // ATENÇÃO: Gera a string de texto da imagem
+      allowsEditing: true, 
+      aspect: [1, 1],      
+      quality: 0.4,        
+      base64: true,        
     });
 
     if (!result.canceled) {
-      // Guarda a imagem formatada pronta para o banco de dados e para exibição
       setFotoPet(`data:image/jpeg;base64,${result.assets[0].base64}`);
     }
   };
@@ -95,24 +106,22 @@ export default function CadastroPet({ navigation }) {
 
         const uid = usuarioAtual.uid;
 
-        // 4. Salvando no Firestore incluindo o campo "foto"
         await addDoc(collection(db, "usuarios", uid, "pets"), {
           nome: nomePetNormalizado,
           especie: especie,
           raca: racaNormalizada,
           sexo: value,
           castrado: castrado,
-          foto: fotoPet, // Se for null, o Firebase aceita. Se tiver foto, salva o texto Base64
+          foto: fotoPet, 
           criadoEm: serverTimestamp()
         });
 
-        // Limpa os estados
         setValue("macho");
         setEspecie("cachorro");
         setNomePet("");
         setRaca("");
         setCastrado("nao");
-        setFotoPet(null); // Limpa a foto do formulário
+        setFotoPet(null); 
         
         Alert.alert('Sucesso!', '🐾 Novo pet cadastrado com sucesso!', [
           { text: 'OK', onPress: () => navigation.navigate('Home') }
@@ -145,12 +154,12 @@ export default function CadastroPet({ navigation }) {
             screen1="Home"
             screen1Text="Voltar"
             onPress={salvarPet}
+            validarForm={validarForm}
           >
             
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Dados do Pet</Text>
 
-              {/* 5. BOTÃO SELETOR DE FOTO ADICIONADO AQUI */}
               <TouchableOpacity style={styles.avatarContainer} onPress={selecionarFoto}>
                 {fotoPet ? (
                   <Image source={{ uri: fotoPet }} style={styles.avatarImage} />
@@ -177,27 +186,31 @@ export default function CadastroPet({ navigation }) {
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
                   style={[styles.toggleButton, especie === 'cachorro' && styles.toggleButtonActive]}
-                  onPress={() => setEspecie('cachorro')}
+                  onPress={() => handleEspecieChange('cachorro')}
                 >
                   <MaterialCommunityIcons name="dog" size={20} color={especie === 'cachorro' ? '#FFF' : '#4A5568'} />
                   <Text style={[styles.toggleText, especie === 'cachorro' && styles.toggleTextActive]}>Cachorro</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.toggleButton, especie === 'gato' && styles.toggleButtonActive]}
-                  onPress={() => setEspecie('gato')}
+                  onPress={() => handleEspecieChange('gato')}
                 >
                   <MaterialCommunityIcons name="cat" size={20} color={especie === 'gato' ? '#FFF' : '#4A5568'} />
                   <Text style={[styles.toggleText, especie === 'gato' && styles.toggleTextActive]}>Gato</Text>
                 </TouchableOpacity>
               </View>
 
-              <Input 
-                placeholder="Raça" 
-                maxLength={30}  
-                value={raca} 
-                onChangeText={setRaca} 
-                onBlur={() => validarCampo("raca", raca)}
-              />
+              {/* MODIFIED: Custom Choice Trigger for Picker Overlay Container */}
+              <Text style={styles.labelSelect}>Raça</Text>
+              <TouchableOpacity 
+                style={styles.selectTrigger} 
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={[styles.selectTriggerText, !raca && { color: "#a1a1a1" }]}>
+                  {raca ? raca : "Selecione a Raça"}
+                </Text>
+                <FontAwesome name="chevron-down" size={14} color="#4A5568" />
+              </TouchableOpacity>
               {errors.raca ? <Text style={styles.errorStyle}>{errors.raca}</Text> : null}
 
               {/* Selector de Sexo */}
@@ -242,6 +255,44 @@ export default function CadastroPet({ navigation }) {
           </Form>
         </ScrollView>
       </ImageBackground>
+
+      {/* NEW VIEWPORT LAYOUT: Slidable Bottom Selection Overlay */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Selecione a Raça</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <FontAwesome name="times-circle" size={24} color="#E53E3E" />
+              </TouchableOpacity>
+            </View>
+            
+            <FlatList
+              data={LISTA_RACAS[especie]}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={[styles.optionItem, raca === item && styles.optionItemActive]} 
+                  onPress={() => {
+                    setRaca(item);
+                    setModalVisible(false);
+                    validarCampo("raca", item);
+                  }}
+                >
+                  <Text style={[styles.optionText, raca === item && styles.optionTextActive]}>{item}</Text>
+                  {raca === item && <FontAwesome name="check" size={16} color="#FFF" />}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+
       <StatusBar style="auto" />
     </KeyboardAvoidingView>
   );
@@ -264,7 +315,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  // NOVOS ESTILOS PARA O BOTÃO DA FOTO DE PERFIL
   avatarContainer: {
     alignSelf: 'center',
     marginBottom: 20,
@@ -300,5 +350,58 @@ const styles = StyleSheet.create({
   toggleButtonActive: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
   toggleText: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginLeft: 6 },
   toggleTextActive: { color: '#FFFFFF' },
-  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' }
+  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' },
+
+  // NEW STYLES: Custom Dropdown Menu triggers and slidable panel overrides
+  selectTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderColor: "#CBD5E0",
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 10,
+    width: '100%',
+    height: 48,
+    marginTop: 4
+  },
+  selectTriggerText: { fontSize: 16, color: '#000' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end'
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+    maxHeight: '70%'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 10
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748' },
+  optionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: '#F7FAFC'
+  },
+  optionItemActive: { backgroundColor: '#4A90E2' },
+  optionText: { fontSize: 16, color: '#4A5568', fontWeight: '500' },
+  optionTextActive: { color: '#FFF', fontWeight: '700' }
 });

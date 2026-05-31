@@ -22,6 +22,10 @@ export default function Login({navigation}) {
   const [error, setError] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
+  const emailRegex = /\S+@\S+\.\S+/;
+  const validarForm = senha.length >= 6  && emailRegex.test(email);
+
+
   const validar = () => {
     let valido = true;
     const newErrors = { email: "", senha: "" };
@@ -81,6 +85,7 @@ export default function Login({navigation}) {
         source={require('../assets/background4.png')}
         resizeMode="cover"
         style={styles.image}
+        
       >
         <Form
           h1="PetSuam"
@@ -92,6 +97,7 @@ export default function Login({navigation}) {
           screen2="Cadastro" // You can change this to "ResetPassword" later if needed
           screen2Text="Esqueci minha senha"
           onPress={entrar}
+          validarForm={validarForm}
         >
           {/* Visual card to organize elements nicely */}
           <View style={styles.card}>
