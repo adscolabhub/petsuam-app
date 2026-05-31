@@ -199,10 +199,10 @@ export default function MapScreen({ navigation }) {
             {/* BOTTOM NAVIGATION */}
             <View style={styles.bottomNav}>
                 <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('Home')}>
-                <MaterialCommunityIcons name="paw" size={28} color="#4A90E2" />
+                <MaterialCommunityIcons name="paw" size={28} color="#A0AEC0" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('MapScreen')}>
-                <FontAwesome5 name="map-marked-alt" size={26} color="#A0AEC0" />
+                <FontAwesome5 name="map-marked-alt" size={26} color="#4A90E2" />
                 </TouchableOpacity>
             </View>
             <StatusBar style="auto" />
@@ -213,6 +213,7 @@ export default function MapScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
       flex: 1,
+      paddingTop: 40,
   },
 
   map: {
