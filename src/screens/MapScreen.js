@@ -3,12 +3,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, ImageBackground, Platform, ActivityIndicator, ScrollView, Modal } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import MapViewDirections from 'react-native-maps-directions';
 import { MaterialCommunityIcons, FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
-const GOOGLE_MAPS_APIKEY = 'AIzaSyACYI38ck5E_hWiZxpDsOG8eA01KnN5R20';
+const GOOGLE_MAPS_APIKEY = '';
 
 export default function MapScreen({ navigation }) {
     const mapRef = useRef(null);
@@ -111,6 +111,7 @@ export default function MapScreen({ navigation }) {
             </View>
             <MapView
                 ref={mapRef}
+                provider={PROVIDER_GOOGLE} // 2. Add this line right here
                 style={styles.map}
                 showsUserLocation
                 initialRegion={{

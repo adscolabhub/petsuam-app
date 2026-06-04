@@ -21,7 +21,7 @@
       },
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyACYI38ck5E_hWiZxpDsOG8eA01KnN5R20"
+          "apiKey": ""
         }
       },
       "package": "com.adscolabhub.PetSuam",
