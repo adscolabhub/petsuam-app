@@ -4,10 +4,10 @@
     "slug": "PetSuam",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/icon.png",
+    "icon": "./src/assets/petsuam.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./src/assets/splash-icon.png",
+      "image": "./src/assets/petsuam.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,13 +16,27 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/android-icon-foreground.png",
-        "backgroundColor": "#E6F4FE"
-        
-      }
+        "foregroundImage": "./src/assets/petsuam.png",
+        "backgroundColor": "#ffffff"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      },
+      "package": "com.adscolabhub.PetSuam",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+  ]
     },
     "web": {
-      "favicon": "./src/assets/favicon.png"
+      "favicon": "./src/assets/petsuam.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "35dbad34-96c6-43f6-a9d1-53c4782bbaef"
+      }
     }
   }
 }
