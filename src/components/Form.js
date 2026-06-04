@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-export default function Form({ h1, h2, h3, children, btnPlaceholder, screen1, screen1Text, screen2, screen2Text, onPress }) {
+export default function Form({ h1, h2, h3, children, btnPlaceholder, screen1, screen1Text, screen2, screen2Text, onPress, validarForm }) {
   const navigation = useNavigation();
   
   return (
@@ -19,9 +19,10 @@ export default function Form({ h1, h2, h3, children, btnPlaceholder, screen1, sc
       
         {/* Custom Modernized Primary Button */}
         <TouchableOpacity 
-          style={styles.mainButton} 
+          style={[styles.mainButton, !validarForm && styles.buttonDisabled]} 
           onPress={onPress}
           activeOpacity={0.8}
+          disabled={!validarForm}
         >
           <Text style={styles.mainButtonText}>{btnPlaceholder}</Text>
         </TouchableOpacity>
@@ -114,5 +115,21 @@ const styles = StyleSheet.create({
     color: "#4A90E2",
     fontSize: 14,
     fontWeight: '600',
-  }
+  },
+  buttonDisabled: {
+    
+    backgroundColor: '#cccccc', // Primary Brand Color
+    width: 320, // Matches the exact width of our clean form cards
+    height: 52, // Standard premium touch height for mobile apps
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+    // Button shadows for elevated UI feel
+    shadowColor: '#959595',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0,
+    shadowRadius: 6,
+    elevation: 0,    
+    },
 });

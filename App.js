@@ -8,7 +8,11 @@ import Cadastro from "./src/screens/Cadastro.js";
 import Home from "./src/screens/Home.js";
 import CadastroPet from './src/screens/CadastroPet.js';
 import PerfilPet from './src/screens/PerfilPet.js';
+
 import MapScreen from './src/screens/MapScreen.js';
+
+import EsqueceuSenha from './src/screens/EsqueceuSenha.js';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -21,7 +25,11 @@ export default function App() {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="CadastroPet" component={CadastroPet} />
         <Stack.Screen name="PerfilPet" component={PerfilPet} />
+
         <Stack.Screen name="MapScreen" component={MapScreen} />
+
+        <Stack.Screen name="EsqueceuSenha" component={EsqueceuSenha} />
+
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

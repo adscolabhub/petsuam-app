@@ -10,7 +10,9 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Image // 1. Importado para mostrar o preview da foto
+  Image,
+  Modal, // Added for the custom select field modal view
+  FlatList // Added to render breeds efficiently
 } from 'react-native';
 import Form from "../components/Form.js";
 import Input from "../components/Input.js";
@@ -21,9 +23,13 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { doc, setDoc, collection, addDoc } from "firebase/firestore"; 
 import { serverTimestamp } from "firebase/firestore";
-
-// 2. Importa o Image Picker do Expo
 import * as ImagePicker from 'expo-image-picker';
+
+// Predefined breed matrices linked directly to selected species
+const LISTA_RACAS = {
+  cachorro: ["Vira-lata (SRD)", "Labrador", "Golden Retriever", "German Shepherd", "Poodle", "Bulldog", "Pinscher", "Chihuahua", "Pug", "Outra Raça"],
+  gato: ["Vira-lata (SRD)", "Persa", "Siamês", "Maine Coon", "Angorá", "Sphynx", "Ragdoll", "Outra Raça"]
+};
 
 export default function Cadastro({ navigation }) {
   const [value, setValue] = React.useState('macho');
@@ -41,11 +47,17 @@ export default function Cadastro({ navigation }) {
   const [errors, setErrors] = React.useState({});
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmationPassword, setShowConfirmationPassword] = React.useState(false);
-
-  // 3. Estado para armazenar a foto do pet (Base64)
   const [fotoPet, setFotoPet] = React.useState(null);
 
-  // 4. Função para abrir a galeria e capturar a foto
+  // Modal Visibility State
+  const [modalVisible, setModalVisible] = React.useState(false);
+
+  // Automatically clears out-of-bounds breed choices when toggling species tabs
+  const handleEspecieChange = (novaEspecie) => {
+    setEspecie(novaEspecie);
+    setRaca(""); // Clear the field to force a correct select choice
+  };
+
   const selecionarFoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
@@ -58,7 +70,7 @@ export default function Cadastro({ navigation }) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.4, // Reduz o tamanho para o Firestore aceitar a string tranquilamente
+      quality: 0.4, 
       base64: true,
     });
 
@@ -66,6 +78,9 @@ export default function Cadastro({ navigation }) {
       setFotoPet(`data:image/jpeg;base64,${result.assets[0].base64}`);
     }
   };
+
+  const emailRegex = /\S+@\S+\.\S+/;
+  const validarForm = nome.length > 1 && senha.length >= 6 && confirmarSenha.length >= 6 && telefone.length === 15 && emailRegex.test(email) && raca.trim().length > 1 && nomePet.trim().length > 1;
 
   const validarCampo = (campo, valor) => {
     let mensagem = "";
@@ -78,7 +93,6 @@ export default function Cadastro({ navigation }) {
         if (!telefone || telefone.length < 14) mensagem = "Telefone inválido";
         break;
       case "email":
-        const emailRegex = /\S+@\S+\.\S+/;
         if (!emailRegex.test(valor)) mensagem = "Email inválido";
         break;
       case "senha":
@@ -88,7 +102,7 @@ export default function Cadastro({ navigation }) {
         if (!valor.trim()) mensagem = "Nome do pet é obrigatório";
         break;
       case "raca":
-        if (!valor.trim()) mensagem = "A raça do pet é obrigatória"; // Corrigido bug de sintaxe de 'message' para 'mensagem'
+        if (!valor.trim()) mensagem = "A raça do pet é obrigatória";
         break;
     }
 
@@ -104,8 +118,6 @@ export default function Cadastro({ navigation }) {
 
     if (!nome.trim()) { newErrors.nome = "Nome é obrigatório"; valido = false; }
     if (!telefone || telefone.length < 14) { newErrors.telefone = "Telefone inválido"; valido = false; }
-    
-    const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email)) { newErrors.email = "Email inválido"; valido = false; }
     if (senha.length < 6) { newErrors.senha = "A senha deve ter pelo menos 6 caracteres"; valido = false; }
     if (senha !== confirmarSenha) { newErrors.confirmarSenha = "As senhas não coincidem"; valido = false; }
@@ -128,7 +140,6 @@ export default function Cadastro({ navigation }) {
         const uid = userCredential.user.uid;
         
         try {
-          // 1. Salva os dados do usuário
           await setDoc(doc(db, "usuarios", uid), {
             uid: uid,
             nome: nomeNormalizado,
@@ -137,14 +148,13 @@ export default function Cadastro({ navigation }) {
             criadoEm: serverTimestamp()
           });
 
-          // 2. Salva o pet incluindo a string da foto
           await addDoc(collection(db, "usuarios", uid, "pets"), {
             nome: nomePetNormalizado,
             especie,
             raca: racaNormalizada,
             sexo: value,
             castrado: castrado,
-            foto: fotoPet, // Foto adicionada aqui!
+            foto: fotoPet, 
             criadoEm: serverTimestamp()
           });
 
@@ -163,7 +173,7 @@ export default function Cadastro({ navigation }) {
         setNomePet("");
         setRaca("");
         setCastrado("nao");
-        setFotoPet(null); // Reseta a foto após sucesso
+        setFotoPet(null); 
         
         Alert.alert('Status do Cadastro:', 'Cadastro realizado com sucesso! 🐾', [
           { text: 'OK', onPress: () => navigation.navigate('Login') }
@@ -200,6 +210,7 @@ export default function Cadastro({ navigation }) {
             screen1="Login"
             screen1Text="Já tem conta? Entrar"
             onPress={cadastrar}
+            validarForm={validarForm}
           >
             {/* --- SEÇÃO: SEUS DADOS --- */}
             <View style={styles.card}>
@@ -271,7 +282,6 @@ export default function Cadastro({ navigation }) {
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Dados do Pet</Text>
 
-              {/* 5. SELETOR VISUAL DA FOTO DO ANIMAL */}
               <TouchableOpacity style={styles.avatarContainer} onPress={selecionarFoto}>
                 {fotoPet ? (
                   <Image source={{ uri: fotoPet }} style={styles.avatarImage} />
@@ -298,27 +308,31 @@ export default function Cadastro({ navigation }) {
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
                   style={[styles.toggleButton, especie === 'cachorro' && styles.toggleButtonActive]}
-                  onPress={() => setEspecie('cachorro')}
+                  onPress={() => handleEspecieChange('cachorro')}
                 >
                   <MaterialCommunityIcons name="dog" size={20} color={especie === 'cachorro' ? '#FFF' : '#4A5568'} />
                   <Text style={[styles.toggleText, especie === 'cachorro' && styles.toggleTextActive]}>Cachorro</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.toggleButton, especie === 'gato' && styles.toggleButtonActive]}
-                  onPress={() => setEspecie('gato')}
+                  onPress={() => handleEspecieChange('gato')}
                 >
                   <MaterialCommunityIcons name="cat" size={20} color={especie === 'gato' ? '#FFF' : '#4A5568'} />
                   <Text style={[styles.toggleText, especie === 'gato' && styles.toggleTextActive]}>Gato</Text>
                 </TouchableOpacity>
               </View>
 
-              <Input 
-                placeholder="Raça" 
-                maxLength={30}  
-                value={raca} 
-                onChangeText={setRaca} 
-                onBlur={() => { setTouched(true); validarCampo("raca", raca); }}
-              />
+              {/* MODIFIED: Custom Select Field UI Wrapper for Breed */}
+              <Text style={styles.labelSelect}>Raça</Text>
+              <TouchableOpacity 
+                style={styles.selectTrigger} 
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={[styles.selectTriggerText, !raca && { color: "#a1a1a1" }]}>
+                  {raca ? raca : "Selecione a Raça"}
+                </Text>
+                <FontAwesome name="chevron-down" size={14} color="#4A5568" />
+              </TouchableOpacity>
               {errors.raca ? <Text style={styles.errorStyle}>{errors.raca}</Text> : null}
 
               {/* Selector de Sexo */}
@@ -359,10 +373,47 @@ export default function Cadastro({ navigation }) {
                 </TouchableOpacity>
               </View>
             </View>
-            
           </Form>
         </ScrollView>
       </ImageBackground>
+
+      {/* NEW ELEMENT: Overlay Option Picker Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Selecione a Raça</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <FontAwesome name="times-circle" size={24} color="#E53E3E" />
+              </TouchableOpacity>
+            </View>
+            
+            <FlatList
+              data={LISTA_RACAS[especie]}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={[styles.optionItem, raca === item && styles.optionItemActive]} 
+                  onPress={() => {
+                    setRaca(item);
+                    setModalVisible(false);
+                    validarCampo("raca", item);
+                  }}
+                >
+                  <Text style={[styles.optionText, raca === item && styles.optionTextActive]}>{item}</Text>
+                  {raca === item && <FontAwesome name="check" size={16} color="#FFF" />}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+
       <StatusBar style="auto" />
     </KeyboardAvoidingView>
   );
@@ -385,7 +436,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  // 6. NOVOS ESTILOS PARA O ELEMENTO DO AVATAR ADICIONADOS AQUI
   avatarContainer: {
     alignSelf: 'center',
     marginBottom: 20,
@@ -424,5 +474,58 @@ const styles = StyleSheet.create({
   inputBox: { backgroundColor: '#FFF', borderColor: "#CBD5E0", borderWidth: 1, padding: 12, borderRadius: 10, width: '100%', color: 'black', marginTop: 12, fontSize: 16 },
   passwordContainer: { position: 'relative', width: '100%' },
   seePassword: { position: "absolute", right: 12, height: '100%', justifyContent: 'center', paddingTop: 10 },
-  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' }
+  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' },
+  
+  // NEW STYLING DICTIONARIES FOR THE CUSTOM BREED SELECTOR
+  selectTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderColor: "#CBD5E0",
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 10,
+    width: '100%',
+    height: 48,
+    marginTop: 4
+  },
+  selectTriggerText: { fontSize: 16, color: '#000' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end'
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+    maxHeight: '70%'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 10
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748' },
+  optionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: '#F7FAFC'
+  },
+  optionItemActive: { backgroundColor: '#4A90E2' },
+  optionText: { fontSize: 16, color: '#4A5568', fontWeight: '500' },
+  optionTextActive: { color: '#FFF', fontWeight: '700' }
 });
