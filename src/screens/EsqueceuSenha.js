@@ -71,7 +71,7 @@ export default function EsqueceuSenha({ navigation }) {
       style={styles.container}
     >
       <ImageBackground
-        source={require('../assets/background4.png')}
+        source={require('../assets/Fundo-Logo.jpeg')}
         resizeMode="cover"
         style={styles.image}
       >

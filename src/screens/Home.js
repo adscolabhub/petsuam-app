@@ -82,7 +82,7 @@ export default function Home({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
-        source={require('../assets/background4.png')}
+        source={require('../assets/Fundo-petsuam.jpeg')}
         resizeMode="cover"
         style={styles.image}
       >
