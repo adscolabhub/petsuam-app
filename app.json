@@ -8,16 +8,14 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./src/assets/petsuam_icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/petsuam_icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./src/assets/petsuam_icon.png"
       },
       "config": {
         "googleMaps": {
