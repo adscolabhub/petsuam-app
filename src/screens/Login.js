@@ -56,14 +56,8 @@ export default function Login({navigation}) {
         );
 
         console.log("Usuário logado:", userCredential.user);
-        Alert.alert('Status do Login:', 'Login realizado com sucesso! 🐾', [
-          {
-            text: 'OK',
-            onPress: () => {
+        
             navigation.navigate('Home'); 
-            }
-          }
-        ]);
         
         // navigation.navigate("Home");
       } catch (error) {
