@@ -33,27 +33,27 @@ export default function MapScreen({ navigation }) {
         };
         setLocation(coords);
     }
-    const deslogarUsuario = () => {
-    Alert.alert(
-      "Sair da Conta",
-      "Tem certeza que deseja sair do PetSuam?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Sair", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut(auth);
-              navigation.replace('Login'); // Usa o replace para limpar o histórico de navegação
-            } catch (error) {
-              Alert.alert("Erro ao sair", "Não foi possível encerrar a sessão: " + error.message);
-            }
-          } 
-        }
-      ]
-    );
-  };
+//     const deslogarUsuario = () => {
+//     Alert.alert(
+//       "Sair da Conta",
+//       "Tem certeza que deseja sair do PetSuam?",
+//       [
+//         { text: "Cancelar", style: "cancel" },
+//         { 
+//           text: "Sair", 
+//           style: "destructive",
+//           onPress: async () => {
+//             try {
+//               await signOut(auth);
+//               navigation.replace('Login'); // Usa o replace para limpar o histórico de navegação
+//             } catch (error) {
+//               Alert.alert("Erro ao sair", "Não foi possível encerrar a sessão: " + error.message);
+//             }
+//           } 
+//         }
+//       ]
+//     );
+//   };
     async function searchPlaces(type) {
         if (!location) return;
         try { 
@@ -101,13 +101,13 @@ export default function MapScreen({ navigation }) {
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Serviços Próximos</Text>
                 <View style={{ width: 40 }} />
-                <TouchableOpacity 
+                {/* <TouchableOpacity 
                     style={styles.logoutButton} 
                     onPress={deslogarUsuario}
                     activeOpacity={0.6}
                     >
                     <MaterialCommunityIcons name="logout" size={26} color="#E53E3E" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
             <MapView
                 ref={mapRef}
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.12,
         shadowRadius: 20,
-        elevation: 12,
+        elevation: 0,
     },
     button: {
         flex: 1,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         justifyContent: "center",
         paddingHorizontal: 18,
-        backgroundColor: "rgba(59,130,246,0.88)",
+        backgroundColor: "#2563EB",
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.25)",
         shadowColor: "#2563EB",
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     vetButton: {
-        backgroundColor: "rgba(139,92,246,0.88)",
+        backgroundColor: "#0EA5A4",
     },
     buttonContent: {
         flexDirection: "row",
