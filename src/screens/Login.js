@@ -82,8 +82,9 @@ export default function Login({navigation}) {
         
       >
         <Form
-          h1="PetSuam"
-          h2="Login"
+          logo={require('../assets/petsuam_croped.png')}
+          // h1="PetSuam"
+          // h2="Login"
           h3="Bem-vindo ao PetSuam"
           btnPlaceholder="Enviar"
           screen1="Cadastro"
