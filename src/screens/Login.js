@@ -59,7 +59,7 @@ export default function Login({navigation}) {
         
             navigation.navigate('Home'); 
         
-        // navigation.navigate("Home");
+
       } catch (error) {
         if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
           Alert.alert("Erro", "Email ou senha inválidos.");
@@ -83,18 +83,16 @@ export default function Login({navigation}) {
       >
         <Form
           logo={require('../assets/petsuam_croped.png')}
-          // h1="PetSuam"
-          // h2="Login"
+          
           h3="Bem-vindo ao PetSuam"
           btnPlaceholder="Enviar"
           screen1="Cadastro"
           screen1Text="Criar conta"
-          screen2="EsqueceuSenha" // You can change this to "ResetPassword" later if needed
+          screen2="EsqueceuSenha" 
           screen2Text="Esqueci minha senha"
           onPress={entrar}
           validarForm={validarForm}
         >
-          {/* Visual card to organize elements nicely */}
           <View style={styles.card}>
             <Input
               placeholder="Email"
@@ -169,7 +167,7 @@ const styles = StyleSheet.create({
     right: 12,
     height: '100%',
     justifyContent: 'center',
-    paddingTop: 14, // Aligns perfectly with the new spacing of your pretty Input
+    paddingTop: 14, 
   },
   errorStyle: {
     color: "#E53E3E",

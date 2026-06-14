@@ -33,27 +33,7 @@ export default function MapScreen({ navigation }) {
         };
         setLocation(coords);
     }
-//     const deslogarUsuario = () => {
-//     Alert.alert(
-//       "Sair da Conta",
-//       "Tem certeza que deseja sair do PetSuam?",
-//       [
-//         { text: "Cancelar", style: "cancel" },
-//         { 
-//           text: "Sair", 
-//           style: "destructive",
-//           onPress: async () => {
-//             try {
-//               await signOut(auth);
-//               navigation.replace('Login'); // Usa o replace para limpar o histórico de navegação
-//             } catch (error) {
-//               Alert.alert("Erro ao sair", "Não foi possível encerrar a sessão: " + error.message);
-//             }
-//           } 
-//         }
-//       ]
-//     );
-//   };
+
     async function searchPlaces(type) {
         if (!location) return;
         try { 
@@ -94,24 +74,17 @@ export default function MapScreen({ navigation }) {
     return (
         <View style={styles.container}>
             <StatusBar style="dark" />
-            {/* HEADER DA TELA */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Ionicons name="arrow-back" size={24} color="#083068" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Serviços Próximos</Text>
                 <View style={{ width: 40 }} />
-                {/* <TouchableOpacity 
-                    style={styles.logoutButton} 
-                    onPress={deslogarUsuario}
-                    activeOpacity={0.6}
-                    >
-                    <MaterialCommunityIcons name="logout" size={26} color="#E53E3E" />
-                </TouchableOpacity> */}
+             
             </View>
             <MapView
                 ref={mapRef}
-                provider={PROVIDER_GOOGLE} // 2. Add this line right here
+                provider={PROVIDER_GOOGLE} 
                 style={styles.map}
                 showsUserLocation
                 initialRegion={{
@@ -148,7 +121,6 @@ export default function MapScreen({ navigation }) {
                 )}
             </MapView>
             <View style={styles.buttonsContainer}>
-                {/* PETSHOPS */}
                 <TouchableOpacity
                     style={styles.button}
                     onPress={() => searchPlaces('petshop')}
@@ -172,7 +144,6 @@ export default function MapScreen({ navigation }) {
                         </View>
                     </View>
                 </TouchableOpacity>
-                {/* VETERINÁRIAS */}
                 <TouchableOpacity
                     style={[styles.button, styles.vetButton]}
                     onPress={() => searchPlaces('veterinary')}
@@ -197,7 +168,6 @@ export default function MapScreen({ navigation }) {
                     </View>
                 </TouchableOpacity>
             </View>
-            {/* BOTTOM NAVIGATION */}
             <View style={styles.bottomNav}>
                 <TouchableOpacity style={styles.navItem} activeOpacity={0.6} onPress={() => navigation.navigate('Home')}>
                 <MaterialCommunityIcons name="paw" size={28} color="#A0AEC0" />

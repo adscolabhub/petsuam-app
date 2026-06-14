@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  Modal, // Added for the custom select field modal view
-  FlatList // Added to render breeds efficiently
+  Modal, 
+  FlatList 
 } from 'react-native';
 import Form from "../components/Form.js";
 import Input from "../components/Input.js";
@@ -25,7 +25,6 @@ import { doc, setDoc, collection, addDoc } from "firebase/firestore";
 import { serverTimestamp } from "firebase/firestore";
 import * as ImagePicker from 'expo-image-picker';
 
-// Predefined breed matrices linked directly to selected species
 const LISTA_RACAS = {
   cachorro: ["Vira-lata (SRD)", "Labrador", "Golden Retriever", "German Shepherd", "Poodle", "Bulldog", "Pinscher", "Chihuahua", "Pug", "Outra Raça"],
   gato: ["Vira-lata (SRD)", "Persa", "Siamês", "Maine Coon", "Angorá", "Sphynx", "Ragdoll", "Outra Raça"]
@@ -49,13 +48,12 @@ export default function Cadastro({ navigation }) {
   const [showConfirmationPassword, setShowConfirmationPassword] = React.useState(false);
   const [fotoPet, setFotoPet] = React.useState(null);
 
-  // Modal Visibility State
+
   const [modalVisible, setModalVisible] = React.useState(false);
 
-  // Automatically clears out-of-bounds breed choices when toggling species tabs
   const handleEspecieChange = (novaEspecie) => {
     setEspecie(novaEspecie);
-    setRaca(""); // Clear the field to force a correct select choice
+    setRaca(""); 
   };
 
   const selecionarFoto = async () => {
@@ -212,7 +210,7 @@ export default function Cadastro({ navigation }) {
             onPress={cadastrar}
             validarForm={validarForm}
           >
-            {/* --- SEÇÃO: SEUS DADOS --- */}
+
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Seus Dados</Text>
               
@@ -278,7 +276,7 @@ export default function Cadastro({ navigation }) {
               {errors.confirmarSenha ? <Text style={styles.errorStyle}>{errors.confirmarSenha}</Text> : null}
             </View>
 
-            {/* --- SEÇÃO: DADOS DO PET --- */}
+
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Dados do Pet</Text>
 
@@ -303,7 +301,6 @@ export default function Cadastro({ navigation }) {
               />
               {errors.nomePet ? <Text style={styles.errorStyle}>{errors.nomePet}</Text> : null}
 
-              {/* Selector de Espécie */}
               <Text style={styles.labelSelect}>Espécie</Text>
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
@@ -322,7 +319,7 @@ export default function Cadastro({ navigation }) {
                 </TouchableOpacity>
               </View>
 
-              {/* MODIFIED: Custom Select Field UI Wrapper for Breed */}
+      
               <Text style={styles.labelSelect}>Raça</Text>
               <TouchableOpacity 
                 style={styles.selectTrigger} 
@@ -335,7 +332,7 @@ export default function Cadastro({ navigation }) {
               </TouchableOpacity>
               {errors.raca ? <Text style={styles.errorStyle}>{errors.raca}</Text> : null}
 
-              {/* Selector de Sexo */}
+          
               <Text style={styles.labelSelect}>Sexo</Text>
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
@@ -354,7 +351,7 @@ export default function Cadastro({ navigation }) {
                 </TouchableOpacity>
               </View>
 
-              {/* Selector de Castrado */}
+       
               <Text style={styles.labelSelect}>O Pet é Castrado?</Text>
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
@@ -377,7 +374,7 @@ export default function Cadastro({ navigation }) {
         </ScrollView>
       </ImageBackground>
 
-      {/* NEW ELEMENT: Overlay Option Picker Modal */}
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -420,9 +417,19 @@ export default function Cadastro({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  image: { flex: 1, width: '100%' },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', paddingBottom: 40, paddingTop: 40 },
+  container: { 
+    flex: 1,
+  },
+  image: { 
+    flex: 1, 
+    width: '100%',
+  },
+  scrollContent: { 
+    flexGrow: 1, 
+    justifyContent: 'center', 
+    paddingBottom: 40, 
+    paddingTop: 40,
+  },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderRadius: 20,
@@ -464,19 +471,81 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#4A90E2',
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748', marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', paddingBottom: 5 },
-  labelSelect: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginTop: 15, marginBottom: 8 },
-  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  toggleButton: { flex: 1, flexDirection: 'row', height: 44, backgroundColor: '#EDF2F7', borderRadius: 10, justifyContent: 'center',  alignItems: 'center', marginHorizontal: 4, borderWidth: 1, borderColor: '#CBD5E0' },
-  toggleButtonActive: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginLeft: 6 },
-  toggleTextActive: { color: '#FFFFFF' },
-  inputBox: { backgroundColor: '#FFF', borderColor: "#CBD5E0", borderWidth: 1, padding: 12, borderRadius: 10, width: '100%', color: 'black', marginTop: 12, fontSize: 16 },
-  passwordContainer: { position: 'relative', width: '100%' },
-  seePassword: { position: "absolute", right: 12, height: '100%', justifyContent: 'center', paddingTop: 10 },
-  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' },
-  
-  // NEW STYLING DICTIONARIES FOR THE CUSTOM BREED SELECTOR
+  sectionTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#2D3748', 
+    marginBottom: 15, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#E2E8F0', 
+    paddingBottom: 5,
+  },
+  labelSelect: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#4A5568', 
+    marginTop: 15, 
+    marginBottom: 8,
+  },
+  toggleRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 5,
+  },
+  toggleButton: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    height: 44, 
+    backgroundColor: '#EDF2F7', 
+    borderRadius: 10, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginHorizontal: 4, 
+    borderWidth: 1, 
+    borderColor: '#CBD5E0',
+  },
+  toggleButtonActive: { 
+    backgroundColor: '#4A90E2', 
+    borderColor: '#4A90E2',
+  },
+  toggleText: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#4A5568', 
+    marginLeft: 6,
+  },
+  toggleTextActive: { 
+    color: '#FFFFFF',
+  },
+  inputBox: { 
+    backgroundColor: '#FFF', 
+    borderColor: "#CBD5E0", 
+    borderWidth: 1, 
+    padding: 12, 
+    borderRadius: 10, 
+    width: '100%', 
+    color: 'black', 
+    marginTop: 12, 
+    fontSize: 16,
+  },
+  passwordContainer: { 
+    position: 'relative', 
+    width: '100%',
+  },
+  seePassword: { 
+    position: "absolute", 
+    right: 12, 
+    height: '100%', 
+    justifyContent: 'center', 
+    paddingTop: 10,
+  },
+  errorStyle: { 
+    color: "#E53E3E", 
+    fontSize: 12, 
+    marginTop: 4, 
+    marginLeft: 4, 
+    fontWeight: '500',
+  },
   selectTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -488,13 +557,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '100%',
     height: 48,
-    marginTop: 4
+    marginTop: 4,
   },
-  selectTriggerText: { fontSize: 16, color: '#000' },
+  selectTriggerText: { 
+    fontSize: 16, 
+    color: '#000',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFF',
@@ -503,7 +575,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
-    maxHeight: '70%'
+    maxHeight: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -512,9 +584,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    paddingBottom: 10
+    paddingBottom: 10,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748' },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#2D3748',
+  },
   optionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -523,9 +599,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     marginBottom: 8,
-    backgroundColor: '#F7FAFC'
+    backgroundColor: '#F7FAFC',
   },
-  optionItemActive: { backgroundColor: '#4A90E2' },
-  optionText: { fontSize: 16, color: '#4A5568', fontWeight: '500' },
-  optionTextActive: { color: '#FFF', fontWeight: '700' }
+  optionItemActive: { 
+    backgroundColor: '#4A90E2',
+  },
+  optionText: { 
+    fontSize: 16, 
+    color: '#4A5568', 
+    fontWeight: '500',
+  },
+  optionTextActive: { 
+    color: '#FFF', 
+    fontWeight: '700',
+  },
 });

@@ -11,21 +11,19 @@ import {
   SafeAreaView,
   Platform,
   ActivityIndicator,
-  Alert // Importado para confirmar se o usuário quer mesmo sair
+  Alert 
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 
 // Importações do Firebase
 import { db, auth } from "../firebase/config"; 
-import { collection, getDocs } from "firebase/firestore";
-import { signOut } from "firebase/auth"; // 1. Importado o método de deslogar
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore"; // Added doc and deleteDoc
+import { signOut } from "firebase/auth"; 
 
 export default function Home({ navigation }) {
-  // Estados para gerenciar os dados e o carregamento
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 2. Função para deslogar do Firebase e voltar para a Login
   const deslogarUsuario = () => {
     Alert.alert(
       "Sair da Conta",
@@ -38,7 +36,7 @@ export default function Home({ navigation }) {
           onPress: async () => {
             try {
               await signOut(auth);
-              navigation.replace('Login'); // Usa o replace para limpar o histórico de navegação
+              navigation.replace('Login'); 
             } catch (error) {
               Alert.alert("Erro ao sair", "Não foi possível encerrar a sessão: " + error.message);
             }
@@ -48,34 +46,67 @@ export default function Home({ navigation }) {
     );
   };
 
-  useEffect(() => {
-    const buscarPetsDoUsuario = async () => {
-      try {
-        const usuarioAtual = auth.currentUser;
+  // NEW FUNCTION: Handles native document deletion from nested subcollection paths
+  const deletarPet = (idPet, nomePet) => {
+    Alert.alert(
+      "Excluir Pet 🐾",
+      `Tem certeza que deseja remover o(a) ${nomePet} permanentemente?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const uid = auth.currentUser?.uid;
+              if (!uid) return;
 
-        if (usuarioAtual) {
-          const uid = usuarioAtual.uid;
+              // Targets the specific path reference to the single pet document
+              const petDocRef = doc(db, "usuarios", uid, "pets", idPet);
+              await deleteDoc(petDocRef);
 
-          const petsRef = collection(db, "usuarios", uid, "pets");
-          const querySnapshot = await getDocs(petsRef);
-          
-          const listaPets = [];
-          querySnapshot.forEach((doc) => {
-            listaPets.push({ id: doc.id, ...doc.data() });
-          });
-
-          setPets(listaPets);
-        } else {
-          console.log("Nenhum usuário logado");
-          navigation.replace('Login');
+              // Smoothly filters out the deleted pet from state to update layout instantly
+              setPets((prevPets) => prevPets.filter(pet => pet.id !== idPet));
+              
+              Alert.alert("Sucesso", `${nomePet} foi removido com sucesso.`);
+            } catch (error) {
+              Alert.alert("Erro ao deletar", "Não foi possível remover o pet: " + error.message);
+            }
+          }
         }
-      } catch (error) {
-        console.error("Erro ao buscar os pets: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      ]
+    );
+  };
 
+  const buscarPetsDoUsuario = async () => {
+    try {
+      const usuarioAtual = auth.currentUser;
+
+      if (usuarioAtual) {
+        const uid = usuarioAtual.uid;
+
+        const petsRef = collection(db, "usuarios", uid, "pets");
+        const querySnapshot = await getDocs(petsRef);
+        
+        const listaPets = [];
+        querySnapshot.forEach((doc) => {
+          listaPets.push({ id: doc.id, ...doc.data() });
+        });
+
+        setPets(listaPets);
+      } else {
+        console.log("Nenhum usuário logado");
+        navigation.replace('Login');
+      }
+    } catch (error) {
+      console.error("Erro ao buscar os pets: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Re-fetch data on screen load or refocus
+  useEffect(() => {
     buscarPetsDoUsuario();
   }, []);
 
@@ -90,7 +121,6 @@ export default function Home({ navigation }) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* 3. Container do Topo alterado para alinhar o Título e o Botão Sair */}
           <View style={styles.headerContainer}>
             <Text style={styles.headerText}>Meus Pets</Text>
             <TouchableOpacity 
@@ -102,7 +132,6 @@ export default function Home({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Enquanto busca os dados no Firebase, mostra o Carregando */}
           {loading ? (
             <ActivityIndicator size="large" color="#4A90E2" style={{ marginTop: 20 }} />
           ) : pets.length === 0 ? (
@@ -135,11 +164,20 @@ export default function Home({ navigation }) {
                     <Text style={styles.boldLabel}>Castrado:</Text> {pet.castrado === 'sim' ? 'Sim' : 'Não'}
                   </Text>
                 </View>
+
+                {/* MODIFIED: Trash icon button explicitly separated inside card interface */}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => deletarPet(pet.id, pet.nome)}
+                  activeOpacity={0.6}
+                >
+                  <MaterialCommunityIcons name="trash-can-outline" size={24} color="#E53E3E" />
+                </TouchableOpacity>
+
               </TouchableOpacity>
             ))
           )}
 
-          {/* Botão de Adicionar Novo Pet */}
           <TouchableOpacity 
             style={styles.addPetButton}
             activeOpacity={0.7}
@@ -150,7 +188,6 @@ export default function Home({ navigation }) {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* Global Bottom Navigation Bar */}
         <View style={styles.bottomNav}>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.6}>
             <MaterialCommunityIcons name="paw" size={32} color="#4A90E2" />
@@ -182,7 +219,6 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 100,
   },
-  // 4. NOVOS ESTILOS PARA ALINHAMENTO DO HEADER + BOTÃO LOGOUT
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -252,6 +288,15 @@ const styles = StyleSheet.create({
   boldLabel: {
     fontWeight: '600',
     color: '#2D3748',
+  },
+  // NEW STYLE: Positions the trash icon perfectly on the right-hand edge of the card
+  deleteButton: {
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(254, 215, 215, 0.4)',
+    borderRadius: 10,
+    marginLeft: 8
   },
   addPetButton: {
     flexDirection: 'row',

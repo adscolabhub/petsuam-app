@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  Modal, // Added for the picker overlay
-  FlatList // Added to handle rows fluidly
+  Modal,
+  FlatList 
 } from 'react-native';
 import Form from "../components/Form.js";
 import Input from "../components/Input.js";
@@ -21,7 +21,6 @@ import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import * as ImagePicker from 'expo-image-picker';
 
-// Predefined breed database lookup tables
 const LISTA_RACAS = {
   cachorro: ["Vira-lata (SRD)", "Labrador", "Golden Retriever", "Pastor Alemão", "Poodle", "Bulldog", "Pinscher", "Chihuahua", "Pug", "Outra Raça"],
   gato: ["Vira-lata (SRD)", "Persa", "Siamês", "Maine Coon", "Angorá", "Sphynx", "Ragdoll", "Outra Raça"]
@@ -36,13 +35,11 @@ export default function CadastroPet({ navigation }) {
   const [errors, setErrors] = React.useState({});
   const [fotoPet, setFotoPet] = React.useState(null);
 
-  // NEW STATE: Visibility toggle for selection modal window
   const [modalVisible, setModalVisible] = React.useState(false);
 
-  // Safely wipes breed state when species changes to avoid misaligned data
   const handleEspecieChange = (novaEspecie) => {
     setEspecie(novaEspecie);
-    setRaca(""); // Clear select string
+    setRaca(""); 
   };
 
   const validarForm = nomePet.trim().length > 1 && raca.trim().length > 1;
@@ -181,7 +178,7 @@ export default function CadastroPet({ navigation }) {
               />
               {errors.nomePet ? <Text style={styles.errorStyle}>{errors.nomePet}</Text> : null}
 
-              {/* Selector de Espécie */}
+            
               <Text style={styles.labelSelect}>Espécie</Text>
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
@@ -200,7 +197,6 @@ export default function CadastroPet({ navigation }) {
                 </TouchableOpacity>
               </View>
 
-              {/* MODIFIED: Custom Choice Trigger for Picker Overlay Container */}
               <Text style={styles.labelSelect}>Raça</Text>
               <TouchableOpacity 
                 style={styles.selectTrigger} 
@@ -213,7 +209,6 @@ export default function CadastroPet({ navigation }) {
               </TouchableOpacity>
               {errors.raca ? <Text style={styles.errorStyle}>{errors.raca}</Text> : null}
 
-              {/* Selector de Sexo */}
               <Text style={styles.labelSelect}>Sexo</Text>
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
@@ -232,7 +227,6 @@ export default function CadastroPet({ navigation }) {
                 </TouchableOpacity>
               </View>
 
-              {/* Selector de Castrado */}
               <Text style={styles.labelSelect}>O Pet é Castrado?</Text>
               <View style={styles.toggleRow}>
                 <TouchableOpacity 
@@ -256,7 +250,6 @@ export default function CadastroPet({ navigation }) {
         </ScrollView>
       </ImageBackground>
 
-      {/* NEW VIEWPORT LAYOUT: Slidable Bottom Selection Overlay */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -299,9 +292,19 @@ export default function CadastroPet({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  image: { flex: 1, width: '100%' },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', paddingBottom: 40, paddingTop: 40 },
+  container: { 
+    flex: 1,
+  },
+  image: { 
+    flex: 1, 
+    width: '100%',
+  },
+  scrollContent: { 
+    flexGrow: 1, 
+    justifyContent: 'center', 
+    paddingBottom: 40, 
+    paddingTop: 40,
+  },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderRadius: 20,
@@ -343,16 +346,59 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#4A90E2',
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748', marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', paddingBottom: 5 },
-  labelSelect: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginTop: 15, marginBottom: 8 },
-  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  toggleButton: { flex: 1, flexDirection: 'row', height: 44, backgroundColor: '#EDF2F7', borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginHorizontal: 4, borderWidth: 1, borderColor: '#CBD5E0' },
-  toggleButtonActive: { backgroundColor: '#4A90E2', borderColor: '#4A90E2' },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#4A5568', marginLeft: 6 },
-  toggleTextActive: { color: '#FFFFFF' },
-  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' },
-
-  // NEW STYLES: Custom Dropdown Menu triggers and slidable panel overrides
+  sectionTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#2D3748', 
+    marginBottom: 15, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#E2E8F0', 
+    paddingBottom: 5,
+  },
+  labelSelect: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#4A5568', 
+    marginTop: 15, 
+    marginBottom: 8,
+  },
+  toggleRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 5,
+  },
+  toggleButton: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    height: 44, 
+    backgroundColor: '#EDF2F7', 
+    borderRadius: 10, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginHorizontal: 4, 
+    borderWidth: 1, 
+    borderColor: '#CBD5E0',
+  },
+  toggleButtonActive: { 
+    backgroundColor: '#4A90E2', 
+    borderColor: '#4A90E2',
+  },
+  toggleText: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#4A5568', 
+    marginLeft: 6,
+  },
+  toggleTextActive: { 
+    color: '#FFFFFF',
+  },
+  errorStyle: { 
+    color: "#E53E3E", 
+    fontSize: 12, 
+    marginTop: 4, 
+    marginLeft: 4, 
+    fontWeight: '500',
+  },
   selectTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -364,13 +410,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '100%',
     height: 48,
-    marginTop: 4
+    marginTop: 4,
   },
-  selectTriggerText: { fontSize: 16, color: '#000' },
+  selectTriggerText: { 
+    fontSize: 16, 
+    color: '#000',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFF',
@@ -379,7 +428,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
-    maxHeight: '70%'
+    maxHeight: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -388,9 +437,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    paddingBottom: 10
+    paddingBottom: 10,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748' },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#2D3748',
+  },
   optionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -399,9 +452,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     marginBottom: 8,
-    backgroundColor: '#F7FAFC'
+    backgroundColor: '#F7FAFC',
   },
-  optionItemActive: { backgroundColor: '#4A90E2' },
-  optionText: { fontSize: 16, color: '#4A5568', fontWeight: '500' },
-  optionTextActive: { color: '#FFF', fontWeight: '700' }
+  optionItemActive: { 
+    backgroundColor: '#4A90E2',
+  },
+  optionText: { 
+    fontSize: 16, 
+    color: '#4A5568', 
+    fontWeight: '500',
+  },
+  optionTextActive: { 
+    color: '#FFF', 
+    fontWeight: '700',
+  },
 });

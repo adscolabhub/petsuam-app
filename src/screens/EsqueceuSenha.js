@@ -19,7 +19,6 @@ export default function EsqueceuSenha({ navigation }) {
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState("");
 
-  // Enables the submit button only if the email field has content
   const validarForm = email.trim().length > 4;
 
   const validarCampo = (valor) => {
@@ -40,7 +39,6 @@ export default function EsqueceuSenha({ navigation }) {
     const emailNormalizado = email.toLowerCase().trim();
 
     try {
-      // Triggers Firebase to send the password reset link
       await sendPasswordResetEmail(auth, emailNormalizado);
       
       Alert.alert(
@@ -51,7 +49,6 @@ export default function EsqueceuSenha({ navigation }) {
         ]
       );
     } catch (err) {
-      // Handles classic Firebase account validation edge cases
       switch (err.code) {
         case "auth/invalid-email":
           setError("O formato do e-mail digitado é inválido.");
@@ -113,9 +110,19 @@ export default function EsqueceuSenha({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  image: { flex: 1, width: '100%' },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', paddingBottom: 40, paddingTop: 40 },
+  container: { 
+    flex: 1,
+  },
+  image: { 
+    flex: 1, 
+    width: '100%',
+  },
+  scrollContent: { 
+    flexGrow: 1, 
+    justifyContent: 'center', 
+    paddingBottom: 40, 
+    paddingTop: 40,
+  },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderRadius: 20,
@@ -129,6 +136,20 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#2D3748', marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', paddingBottom: 5 },
-  errorStyle: { color: "#E53E3E", fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' }
+  sectionTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#2D3748', 
+    marginBottom: 15, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#E2E8F0', 
+    paddingBottom: 5,
+  },
+  errorStyle: { 
+    color: "#E53E3E", 
+    fontSize: 12, 
+    marginTop: 4, 
+    marginLeft: 4, 
+    fontWeight: '500',
+  },
 });

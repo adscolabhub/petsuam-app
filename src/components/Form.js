@@ -8,7 +8,6 @@ export default function Form({logo, h1, h2, h3, children, btnPlaceholder, screen
   return (
     <View style={styles.formContainer}>
       
-      {/* Header Titles */}
       {logo ? (
         <Image
           source={logo}
@@ -19,16 +18,20 @@ export default function Form({logo, h1, h2, h3, children, btnPlaceholder, screen
             alignSelf: "center",
           }}
         />
-      ) : null}
-      {/* <Text style={styles.h1}>{h1}</Text> */}
-      {/* <Text style={styles.h2}>{h2}</Text> */}
+      ) : (
+        <>
+        <Text style={styles.h1}>{h1}</Text> 
+        <Text style={styles.h2}>{h2}</Text>
+        </>
+      )}
+       
       <Text style={styles.h3}>{h3}</Text>
 
-      {/* Children Elements (Your Inputs and Cards) */}
+
       <View style={styles.widthWrapper}>
         {children}
       
-        {/* Custom Modernized Primary Button */}
+
         <TouchableOpacity 
           style={[styles.mainButton, !validarForm && styles.buttonDisabled]} 
           onPress={onPress}
@@ -38,7 +41,7 @@ export default function Form({logo, h1, h2, h3, children, btnPlaceholder, screen
           <Text style={styles.mainButtonText}>{btnPlaceholder}</Text>
         </TouchableOpacity>
         
-        {/* Navigation Links */}
+
         <View style={styles.linksContainer}>
           <TouchableOpacity 
             onPress={() => navigation.navigate(screen1)}
@@ -75,7 +78,7 @@ const styles = StyleSheet.create({
   },
   h1: {
     fontSize: 40,
-    fontWeight: '900', // Extra bold presence for the App Branding
+    fontWeight: '900', 
     marginBottom: 4,
     color: "#083068",
     letterSpacing: 0.5,
@@ -88,19 +91,19 @@ const styles = StyleSheet.create({
   },
   h3: {
     fontSize: 15,
-    color: "#718096", // Soft slate gray so it acts nicely as a subtitle
+    color: "#718096", 
     marginBottom: 20,
     textAlign: 'center',
   },
   mainButton: {
-    backgroundColor: '#4A90E2', // Primary Brand Color
-    width: 320, // Matches the exact width of our clean form cards
-    height: 52, // Standard premium touch height for mobile apps
+    backgroundColor: '#4A90E2', 
+    width: 320, 
+    height: 52, 
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 15,
-    // Button shadows for elevated UI feel
+  
     shadowColor: '#4A90E2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   linkTouchTarget: {
-    paddingVertical: 6, // Expands the tappable zone so users don't miss the link
+    paddingVertical: 6,
     paddingHorizontal: 16,
   },
   linkText: {
@@ -129,14 +132,14 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     
-    backgroundColor: '#cccccc', // Primary Brand Color
-    width: 320, // Matches the exact width of our clean form cards
-    height: 52, // Standard premium touch height for mobile apps
+    backgroundColor: '#cccccc', 
+    width: 320,
+    height: 52, 
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 15,
-    // Button shadows for elevated UI feel
+
     shadowColor: '#959595',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0,
