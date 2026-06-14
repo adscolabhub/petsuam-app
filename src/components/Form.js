@@ -1,16 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-export default function Form({ h1, h2, h3, children, btnPlaceholder, screen1, screen1Text, screen2, screen2Text, onPress, validarForm }) {
+export default function Form({logo, h1, h2, h3, children, btnPlaceholder, screen1, screen1Text, screen2, screen2Text, onPress, validarForm }) {
   const navigation = useNavigation();
   
   return (
     <View style={styles.formContainer}>
       
       {/* Header Titles */}
-      <Text style={styles.h1}>{h1}</Text>
-      <Text style={styles.h2}>{h2}</Text>
+      {logo ? (
+        <Image
+          source={logo}
+          style={{
+            width: 180,
+            height: 180,
+            resizeMode: "contain",
+            alignSelf: "center",
+          }}
+        />
+      ) : null}
+      {/* <Text style={styles.h1}>{h1}</Text> */}
+      {/* <Text style={styles.h2}>{h2}</Text> */}
       <Text style={styles.h3}>{h3}</Text>
 
       {/* Children Elements (Your Inputs and Cards) */}
